@@ -1,23 +1,23 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { python } from "@codemirror/lang-python";
 
 function App() {
+  const [code, setCode] = React.useState('print("Hello, Python!")');
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <h1>Python Editor</h1>
+      <CodeMirror
+        value={code}
+        extensions={[python()]} // Подсветка Python
+        onChange={(value) => setCode(value)}
+        height="400px"
+      />
+      <div>
+        <h3>Код:</h3>
+        <pre>{code}</pre>
+      </div>
     </div>
   );
 }
