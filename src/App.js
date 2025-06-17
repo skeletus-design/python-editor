@@ -1,72 +1,97 @@
 import React, { useState, useEffect } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { python } from "@codemirror/lang-python";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import AuthForm from "./components/AuthForm";
+import PythonEditor from "./components/PythonEditor";
+import Header from "./Header";
+import LecturesPage from "./components/LecturesPage";
+import LectureDetail from "./components/LectureDetail";
+import HomePage from './components/HomePage';
 
 function App() {
-  const [code, setCode] = useState('print("Hello, Python!")');
-  const [output, setOutput] = useState("");
-  const [isPyodideLoaded, setIsPyodideLoaded] = useState(false);
-  const [pyodide, setPyodide] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Инициализация Pyodide
   useEffect(() => {
-    (async () => {
-      const pyodide = await window.loadPyodide({
-        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
-      });
-      setPyodide(pyodide);
-      setIsPyodideLoaded(true);
-    })();
+    const token = localStorage.getItem('authToken');
+    setIsAuthenticated(!!token);
+    setIsCheckingAuth(false);
   }, []);
 
-  // Выполнение кода
-  const runCode = async () => {
-    if (!pyodide) return;
-  try {
-    // Сбрасываем вывод перед выполнением
-    setOutput("Выполняю...\n");
-    
-    // Перехватываем вывод print()
-    let output = "";
-    pyodide.setStdout({ batched: (text) => (output += text + "\n") });
-    
-    await pyodide.runPythonAsync(code);
-    setOutput(output || "Код выполнен (но print() не вызван)");
-  } catch (error) {
-    setOutput(`Ошибка: ${error.message}`);
-  }
+  const ProtectedLayout = ({ children }) => {
+    if (isCheckingAuth) {
+      return <div>Проверка авторизации...</div>;
+    }
+
+    return isAuthenticated ? (
+      <>
+        <Header />
+        {children}
+      </>
+    ) : (
+      <Navigate to="/auth" replace />
+    );
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>Python Editor</h1>
-      <CodeMirror
-        value={code}
-        extensions={[python()]}
-        onChange={(value) => setCode(value)}
-        height="300px"
-      />
-      <button
-        onClick={runCode}
-        disabled={!isPyodideLoaded}
-        style={{ margin: "10px 0", padding: "8px 16px" }}
-      >
-        {isPyodideLoaded ? "Выполнить код" : "Загрузка Pyodide..."}
-      </button>
-      <div>
-        <h3>Результат:</h3>
-        <pre
-          style={{
-            background: "#282a36",
-            color: "#f8f8f2",
-            padding: "10px",
-            borderRadius: "4px",
-          }}
-        >
-          {output}
-        </pre>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route 
+          path="/auth" 
+          element={
+            isAuthenticated ? (
+              <Navigate to="/lectures" replace />
+            ) : (
+              <AuthForm onAuthSuccess={() => setIsAuthenticated(true)} />
+            )
+          } 
+        />
+
+        <Route
+          path="/home"
+          element={
+            <ProtectedLayout>
+              <HomePage/>
+            </ProtectedLayout>
+          }
+        />
+
+        <Route 
+          path="/lectures" 
+          element={
+            <ProtectedLayout>
+              <LecturesPage />
+            </ProtectedLayout>
+          } 
+        />
+
+        <Route 
+          path="/lectures/:id" 
+          element={
+            <ProtectedLayout>
+              <LectureDetail />
+            </ProtectedLayout>
+          } 
+        />
+
+        <Route 
+          path="/editor" 
+          element={
+            <ProtectedLayout>
+              <PythonEditor />
+            </ProtectedLayout>
+          } 
+        />
+
+        <Route 
+          path="/" 
+          element={
+            <Navigate to={isAuthenticated ? "/home" : "/auth"} replace />
+          } 
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
