@@ -1,3 +1,16 @@
+# Рект приложения для написания кода в браузере.
+Данное приложение, в перспективе, должно помочь проверять знания студентов в области программирования.
+
+## Планируется внедрение двухфакторной системы аутентификации пользователей.
+Совместно с образовательной платформой [my.vshp.online](https://vshp.online/?roistat_visit=2600130)
+
+## Установка зависимостей
+```
+npm i react
+npm i codemirror
+npm i codemirror/lang-python
+```
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
